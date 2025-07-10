@@ -40,7 +40,14 @@ def load_visit_data():
     df['visit_date'] = pd.to_datetime(df['visit_date'])
     return df
 
-model = load_model()
+
+
+import os
+import joblib
+
+model_path = os.path.join(os.path.dirname(__file__), "models", "xgb_visitor_model.pkl")
+model = joblib.load(model_path)
+
 encoder = load_encoder()
 store_df = load_store_data()
 stats_df = load_stats_data()
