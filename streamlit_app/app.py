@@ -20,11 +20,11 @@ st.set_page_config(
 # =========================
 @st.cache_resource
 def load_model():
-    return joblib.load('../models/xgb_visitor_model.pkl')
+    return joblib.load('models/xgb_visitor_model.pkl')
 
 @st.cache_resource
 def load_encoder():
-    return joblib.load('../models/store_label_encoder.pkl')
+    return joblib.load('models/store_label_encoder.pkl')
 
 @st.cache_data
 def load_store_data():
