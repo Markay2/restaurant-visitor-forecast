@@ -28,15 +28,15 @@ def load_encoder():
 
 @st.cache_data
 def load_store_data():
-    return pd.read_csv('../data/air_store_info.csv')
+    return pd.read_csv('data/air_store_info.csv')
 
 @st.cache_data
 def load_stats_data():
-    return pd.read_csv('../data/store_stats.csv')
+    return pd.read_csv('data/store_stats.csv')
 
 @st.cache_data
 def load_visit_data():
-    df = pd.read_csv('../data/air_visit_data.csv')
+    df = pd.read_csv('data/air_visit_data.csv')
     df['visit_date'] = pd.to_datetime(df['visit_date'])
     return df
 
