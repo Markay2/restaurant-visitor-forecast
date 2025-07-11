@@ -28,15 +28,15 @@ def load_encoder():
 
 @st.cache_data
 def load_store_data():
-    return pd.read_csv('data/air_store_info.csv')
+    return pd.read_csv('../data/air_store_info.csv')
 
 @st.cache_data
 def load_stats_data():
-    return pd.read_csv('data/store_stats.csv')
+    return pd.read_csv('../data/store_stats.csv')
 
 @st.cache_data
 def load_visit_data():
-    df = pd.read_csv('data/air_visit_data.csv')
+    df = pd.read_csv('../data/air_visit_data.csv')
     df['visit_date'] = pd.to_datetime(df['visit_date'])
     return df
 
@@ -47,6 +47,10 @@ import joblib
 
 model_path = os.path.join(os.path.dirname(__file__), "models", "xgb_visitor_model.pkl")
 model = joblib.load(model_path)
+
+model_path = os.path.join(os.path.dirname(__file__), "models", "store_label_encoder.pkl")
+encoder = joblib.load(model_path)
+
 
 encoder = load_encoder()
 store_df = load_store_data()
