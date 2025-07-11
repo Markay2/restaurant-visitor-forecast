@@ -59,7 +59,7 @@ def load_store_stats():
 encoder = load_encoder()
 model = load_model()
 store_df = load_store_data()
-stats_df = load_stats_data()
+stats_df = load_store_stats()
 visit_df = load_visit_data()
 
 # =========================
