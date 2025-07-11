@@ -5,6 +5,7 @@ import joblib
 from datetime import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
 
 # =========================
 # PAGE CONFIGURATION
@@ -18,11 +19,7 @@ st.set_page_config(
 # =========================
 # LOAD MODELS AND DATA
 # =========================
-
-import os
-import joblib
-import streamlit as st
-
+# Model loading functions
 @st.cache_data
 def load_encoder():
     # Get the directory where app.py is located
@@ -37,23 +34,27 @@ def load_model():
     model_path = os.path.join(app_dir, 'models', 'xgb_visitor_model.pkl')
     return joblib.load(model_path)
 
-
-
-
+# Data loading functions
 @st.cache_data
 def load_store_data():
-    return pd.read_csv('../data/air_store_info.csv')
-
-@st.cache_data
-def load_stats_data():
-    return pd.read_csv('../data/store_stats.csv')
+    # Get the root directory (go up one level from streamlit_app)
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_path = os.path.join(root_dir, 'data', 'air_store_info.csv')
+    return pd.read_csv(data_path)
 
 @st.cache_data
 def load_visit_data():
-    df = pd.read_csv('../data/air_visit_data.csv')
-    df['visit_date'] = pd.to_datetime(df['visit_date'])
-    return df
+    # Get the root directory (go up one level from streamlit_app)
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_path = os.path.join(root_dir, 'data', 'air_visit_data.csv')
+    return pd.read_csv(data_path)
 
+@st.cache_data
+def load_store_stats():
+    # Get the root directory (go up one level from streamlit_app)
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    data_path = os.path.join(root_dir, 'data', 'store_stats.csv')
+    return pd.read_csv(data_path)
 
 encoder = load_encoder()
 model = load_model()
