@@ -18,6 +18,29 @@ st.set_page_config(
 # =========================
 # LOAD MODELS AND DATA
 # =========================
+
+import os
+import streamlit as st
+
+# Add this at the top of your app, before loading models
+st.write("🔍 **Debugging File Structure**")
+st.write("Current working directory:", os.getcwd())
+st.write("Files in root:", os.listdir('.'))
+
+if os.path.exists('streamlit_app'):
+    st.write("Files in streamlit_app:", os.listdir('streamlit_app'))
+    if os.path.exists('streamlit_app/models'):
+        st.write("Files in streamlit_app/models:", os.listdir('streamlit_app/models'))
+    else:
+        st.write("❌ streamlit_app/models directory does not exist")
+else:
+    st.write("❌ streamlit_app directory does not exist")
+
+
+
+
+
+
 @st.cache_resource
 def load_model():
     return joblib.load('models/xgb_visitor_model.pkl')
