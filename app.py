@@ -103,6 +103,12 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# DIRECTORY SETUP
+# =========================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "models")
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
 # =========================
 # FIXED LOADING FUNCTIONS WITH PROPER ERROR HANDLING
 # =========================
@@ -126,6 +132,7 @@ def load_model():
         return None
     try:
         return joblib.load(file_path)
+
     except Exception as e:
         st.error(f"Error loading model: {str(e)}")
         return None
@@ -170,58 +177,39 @@ def load_store_stats():
 # ENHANCED DATA LOADING WITH COMPREHENSIVE ERROR HANDLING
 # =========================
 @st.cache_data
-def load_all_data():
-    try:
-        with st.spinner("Loading data and models..."):
-            # Check if all required files exist
-            required_files = [
-                'store_label_encoder.pkl',
-                'xgb_visitor_model.pkl',
-                'air_store_info.csv',
-                'store_stats.csv',
-                'air_visit_data.csv'
-            ]
-            
-            missing_files = []
-            for file in required_files:
-                if not os.path.exists(file):
-                    missing_files.append(file)
-            
-            if missing_files:
-                st.error(f"Missing required files: {', '.join(missing_files)}")
-                st.info("Please ensure all required files are in the same directory as app.py")
-                
-                # Show current directory and files for debugging
-                current_dir = os.getcwd()
-                st.info(f"Current directory: {current_dir}")
-                
-                files_in_dir = os.listdir(current_dir)
-                st.info(f"Files in current directory: {', '.join(files_in_dir)}")
-                
-                return None
-            
-            # Load files if all exist
-            encoder = load_encoder()
-            model = load_model()
-            store_df = load_store_data()
-            stats_df = load_store_stats()
-            visit_df = load_visit_data()
-            
-            # Validate loaded data
-            if any(item is None for item in [encoder, model]):
-                st.error("Model or encoder failed to load properly.")
-                return None
-            
-            if any(df.empty for df in [store_df, stats_df, visit_df]):
-                st.error("Some data files are empty. Please check your data.")
-                return None
-            
-            return encoder, model, store_df, stats_df, visit_df
-            
-    except Exception as e:
-        st.error(f"Error loading data: {str(e)}")
-        st.info("Please check if all model and data files are properly uploaded.")
+def load_encoder():
+    path = os.path.join(MODEL_DIR, "store_label_encoder.pkl")
+    if not os.path.exists(path):
+        st.error(f"Encoder not found: {path}")
         return None
+    return joblib.load(path)
+
+@st.cache_data
+def load_model():
+    path = os.path.join(MODEL_DIR, "xgb_visitor_model.pkl")
+    if not os.path.exists(path):
+        st.error(f"Model not found: {path}")
+        return None
+    return joblib.load(path)
+
+@st.cache_data
+def load_csv(filename):
+    path = os.path.join(DATA_DIR, filename)
+    if not os.path.exists(path):
+        st.error(f"Data file not found: {path}")
+        return pd.DataFrame()
+    return pd.read_csv(path)
+
+@st.cache_data
+def load_all_data():
+    encoder = load_encoder()
+    model = load_model()
+    store_df = load_csv("air_store_info.csv")
+    stats_df = load_csv("store_stats.csv")
+    visit_df = load_csv("air_visit_data.csv")
+    if None in [encoder, model] or store_df.empty or stats_df.empty or visit_df.empty:
+        st.stop()
+    return encoder, model, store_df, stats_df, visit_df
 
 # Load data
 data = load_all_data()
