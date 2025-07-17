@@ -83,22 +83,26 @@ streamlit run app.py
 
 ## 📁 Project Structure
 
-```
-restaurant-visitor-forecast/
+.devcontainer
 ├── app.py                 # Main Streamlit application
 ├── requirements.txt       # Python dependencies
-├── README.md             # Project documentation
-├── .gitignore            # Git ignore file
-├── data/                 # Data files
+├── README.md              # Project documentation
+├── .gitignore             # Git ignore file (now ignoring checkpoints, caches, etc.)
+├── data/                  # Data files
 │   ├── air_store_info.csv
 │   ├── air_visit_data.csv
+│   ├── cleaned_air_visit_data.csv
+│   ├── feature_engineered_data.csv
 │   └── store_stats.csv
-├── models/               # Trained ML models
+├── models/                # Trained ML models
 │   ├── xgb_visitor_model.pkl
 │   └── store_label_encoder.pkl
-└── notebooks/            # Jupyter notebooks (if any)
-    └── model_training.ipynb
-```
+└── notebooks/             # Jupyter notebooks
+    ├── feature_engineering_02.ipynb
+    └── modeling_03.ipynb   # Ideally rename from modeling_03-checkpoint.ipynb to this
+
+
+    
 
 ### Configuration
 
