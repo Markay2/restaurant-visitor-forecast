@@ -4,7 +4,7 @@ An AI-powered dashboard for predicting restaurant visitor traffic using machine 
 
 ### Live Demo
 
-**[View Live Application](https://restaurant-visitor-forecast-qhqjd2mmnej8ed4jjxc3yx.streamlit.app/)**
+**[View Live Application](https://visitor-forecast-app.streamlit.app/)**
 
 ### Features
 
