@@ -10,6 +10,74 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
 
+
+
+
+# Add this debug code at the top of your app.py (after imports)
+# This will help us see what's happening in Streamlit Cloud
+
+import streamlit as st
+import os
+
+# =========================
+# DEBUG SECTION - Add this temporarily
+# =========================
+st.markdown("### 🔍 Debug Information")
+
+# Show current working directory
+current_dir = os.getcwd()
+st.write(f"**Current directory:** {current_dir}")
+
+# List all files in current directory
+try:
+    files_in_dir = os.listdir(current_dir)
+    st.write(f"**Files found:** {len(files_in_dir)}")
+    
+    # Show first 20 files
+    st.write("**File listing:**")
+    for i, file in enumerate(files_in_dir[:20]):
+        file_path = os.path.join(current_dir, file)
+        file_size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
+        st.write(f"- {file} ({file_size} bytes)")
+    
+    if len(files_in_dir) > 20:
+        st.write(f"... and {len(files_in_dir) - 20} more files")
+    
+except Exception as e:
+    st.error(f"Error listing files: {e}")
+
+# Check specific files
+required_files = [
+    'store_label_encoder.pkl',
+    'xgb_visitor_model.pkl',
+    'air_store_info.csv',
+    'store_stats.csv',
+    'air_visit_data.csv'
+]
+
+st.write("**Required files check:**")
+for file in required_files:
+    exists = os.path.exists(file)
+    if exists:
+        size = os.path.getsize(file)
+        st.write(f"✅ {file} - {size} bytes")
+    else:
+        st.write(f"❌ {file} - NOT FOUND")
+
+# Check if files are readable
+st.write("**File accessibility check:**")
+for file in required_files:
+    if os.path.exists(file):
+        try:
+            with open(file, 'rb') as f:
+                f.read(10)  # Try to read first 10 bytes
+            st.write(f"✅ {file} - Readable")
+        except Exception as e:
+            st.write(f"❌ {file} - Error reading: {e}")
+
+st.markdown("---")
+# End of debug section
+
 # =========================
 # PAGE CONFIGURATION
 # =========================
@@ -103,57 +171,120 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================
-# LOAD MODELS AND DATA
+# FIXED LOADING FUNCTIONS WITH PROPER ERROR HANDLING
 # =========================
 @st.cache_data
 def load_encoder():
-    app_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(app_dir, 'models', 'store_label_encoder.pkl')
-    return joblib.load(model_path)
+    file_path = 'store_label_encoder.pkl'
+    if not os.path.exists(file_path):
+        st.error(f"Encoder file not found at: {file_path}")
+        return None
+    try:
+        return joblib.load(file_path)
+    except Exception as e:
+        st.error(f"Error loading encoder: {str(e)}")
+        return None
 
 @st.cache_data
 def load_model():
-    app_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(app_dir, 'models', 'xgb_visitor_model.pkl')
-    return joblib.load(model_path)
+    file_path = 'xgb_visitor_model.pkl'
+    if not os.path.exists(file_path):
+        st.error(f"Model file not found at: {file_path}")
+        return None
+    try:
+        return joblib.load(file_path)
+    except Exception as e:
+        st.error(f"Error loading model: {str(e)}")
+        return None
 
 @st.cache_data
 def load_store_data():
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_path = os.path.join(root_dir, 'data', 'air_store_info.csv')
-    return pd.read_csv(data_path)
+    file_path = 'air_store_info.csv'
+    if not os.path.exists(file_path):
+        st.error(f"Store data file not found at: {file_path}")
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(file_path)
+    except Exception as e:
+        st.error(f"Error loading store data: {str(e)}")
+        return pd.DataFrame()
 
 @st.cache_data
 def load_visit_data():
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_path = os.path.join(root_dir, 'data', 'air_visit_data.csv')
-    return pd.read_csv(data_path)
+    file_path = 'air_visit_data.csv'
+    if not os.path.exists(file_path):
+        st.error(f"Visit data file not found at: {file_path}")
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(file_path)
+    except Exception as e:
+        st.error(f"Error loading visit data: {str(e)}")
+        return pd.DataFrame()
 
 @st.cache_data
 def load_store_stats():
-    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    data_path = os.path.join(root_dir, 'data', 'store_stats.csv')
-    return pd.read_csv(data_path)
+    file_path = 'store_stats.csv'
+    if not os.path.exists(file_path):
+        st.error(f"Store stats file not found at: {file_path}")
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(file_path)
+    except Exception as e:
+        st.error(f"Error loading store stats: {str(e)}")
+        return pd.DataFrame()
 
 # =========================
-# ENHANCED DATA LOADING WITH ERROR HANDLING
+# ENHANCED DATA LOADING WITH COMPREHENSIVE ERROR HANDLING
 # =========================
 @st.cache_data
 def load_all_data():
     try:
         with st.spinner("Loading data and models..."):
+            # Check if all required files exist
+            required_files = [
+                'store_label_encoder.pkl',
+                'xgb_visitor_model.pkl',
+                'air_store_info.csv',
+                'store_stats.csv',
+                'air_visit_data.csv'
+            ]
+            
+            missing_files = []
+            for file in required_files:
+                if not os.path.exists(file):
+                    missing_files.append(file)
+            
+            if missing_files:
+                st.error(f"Missing required files: {', '.join(missing_files)}")
+                st.info("Please ensure all required files are in the same directory as app.py")
+                
+                # Show current directory and files for debugging
+                current_dir = os.getcwd()
+                st.info(f"Current directory: {current_dir}")
+                
+                files_in_dir = os.listdir(current_dir)
+                st.info(f"Files in current directory: {', '.join(files_in_dir)}")
+                
+                return None
+            
+            # Load files if all exist
             encoder = load_encoder()
             model = load_model()
             store_df = load_store_data()
             stats_df = load_store_stats()
             visit_df = load_visit_data()
             
-            # Data validation
+            # Validate loaded data
+            if any(item is None for item in [encoder, model]):
+                st.error("Model or encoder failed to load properly.")
+                return None
+            
             if any(df.empty for df in [store_df, stats_df, visit_df]):
                 st.error("Some data files are empty. Please check your data.")
                 return None
             
             return encoder, model, store_df, stats_df, visit_df
+            
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
         st.info("Please check if all model and data files are properly uploaded.")
@@ -214,7 +345,7 @@ with col4:
 # =========================
 # ENHANCED SIDEBAR WITH BETTER UX
 # =========================
-st.sidebar.markdown("Forecasting Controls")
+st.sidebar.markdown("### Forecasting Controls")
 
 # Store selection with search
 selected_genre = st.sidebar.selectbox(
@@ -272,7 +403,7 @@ if enable_comparison:
 # =========================
 # ENHANCED DATE SELECTION
 # =========================
-st.sidebar.markdown("Forecast Period")
+st.sidebar.markdown("### Forecast Period")
 
 # Quick date options
 date_option = st.sidebar.radio(
@@ -289,9 +420,9 @@ elif date_option == "Next 30 days":
 else:
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        start_date = st.date_input("Start Date", value=datetime.today().date())
+        start_date = st.sidebar.date_input("Start Date", value=datetime.today().date())
     with col2:
-        end_date = st.date_input("End Date", value=datetime.today().date() + timedelta(days=6))
+        end_date = st.sidebar.date_input("End Date", value=datetime.today().date() + timedelta(days=6))
 
 # Date validation
 if end_date < start_date:
@@ -333,7 +464,11 @@ def prepare_features(store_id, dates):
             df['std_visitors'].fillna(stats_df['std_visitors'].mean(), inplace=True)
         
         # Encode store ID
-        df['store_id_encoded'] = encoder.transform(df['air_store_id'])
+        try:
+            df['store_id_encoded'] = encoder.transform(df['air_store_id'])
+        except Exception as e:
+            st.error(f"Error encoding store ID: {str(e)}")
+            return None
         
         return df
     except Exception as e:
@@ -346,7 +481,7 @@ def prepare_features(store_id, dates):
 if selected_store_id in store_df['air_store_id'].values:
     store_info = store_df[store_df['air_store_id'] == selected_store_id].iloc[0]
     
-    st.markdown("Selected Restaurant Information")
+    st.markdown("### Selected Restaurant Information")
     
     col1, col2, col3 = st.columns(3)
     
@@ -383,12 +518,12 @@ if selected_store_id in store_df['air_store_id'].values:
 # MAIN FORECASTING SECTION
 # =========================
 st.markdown("---")
-st.markdown("AI-Powered Visitor Forecast")
+st.markdown("### AI-Powered Visitor Forecast")
 
 # Create forecast button with enhanced styling
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    if st.button("Generate Forecast", key="main_forecast", help="Click to generate visitor predictions"):
+    if st.button("🔮 Generate Forecast", key="main_forecast", help="Click to generate visitor predictions"):
         
         # Input validation
         if not selected_store_id:
@@ -416,7 +551,7 @@ with col2:
                         # Display results with enhanced styling
                         st.markdown("""
                         <div class="success-box">
-                            <h4>Forecast Generated Successfully!</h4>
+                            <h4>✅ Forecast Generated Successfully!</h4>
                             <p>Your AI-powered visitor predictions are ready.</p>
                         </div>
                         """, unsafe_allow_html=True)
@@ -435,7 +570,7 @@ with col2:
                             st.metric("Busiest Day", max_day)
                         
                         # Interactive Plotly chart
-                        st.markdown("Interactive Forecast Chart")
+                        st.markdown("### Interactive Forecast Chart")
                         
                         fig = go.Figure()
                         
@@ -454,14 +589,15 @@ with col2:
                         weekend_dates = forecast_df[forecast_df['is_weekend'] == 1]['visit_date']
                         weekend_visitors = forecast_df[forecast_df['is_weekend'] == 1]['Predicted Visitors']
                         
-                        fig.add_trace(go.Scatter(
-                            x=weekend_dates,
-                            y=weekend_visitors,
-                            mode='markers',
-                            name='Weekend Days',
-                            marker=dict(size=12, color='#ff6b6b', symbol='diamond'),
-                            hovertemplate='<b>Weekend:</b> %{x}<br><b>Predicted Visitors:</b> %{y}<extra></extra>'
-                        ))
+                        if len(weekend_dates) > 0:
+                            fig.add_trace(go.Scatter(
+                                x=weekend_dates,
+                                y=weekend_visitors,
+                                mode='markers',
+                                name='Weekend Days',
+                                marker=dict(size=12, color='#ff6b6b', symbol='diamond'),
+                                hovertemplate='<b>Weekend:</b> %{x}<br><b>Predicted Visitors:</b> %{y}<extra></extra>'
+                            ))
                         
                         fig.update_layout(
                             title='Visitor Forecast with Weekend Highlights',
@@ -475,7 +611,7 @@ with col2:
                         st.plotly_chart(fig, use_container_width=True)
                         
                         # Detailed forecast table
-                        st.markdown("Detailed Forecast Table")
+                        st.markdown("### Detailed Forecast Table")
                         
                         display_df = forecast_df.copy()
                         display_df['visit_date'] = display_df['visit_date'].dt.strftime('%Y-%m-%d')
@@ -500,13 +636,13 @@ with col2:
                         
             except Exception as e:
                 st.error(f"Forecast generation failed: {str(e)}")
-                st.info("Please try again or contact support if the issue persists.")
+                st.info("Please try again or check your data files.")
 
 # =========================
 # ENHANCED HISTORICAL ANALYSIS
 # =========================
 st.markdown("---")
-st.markdown("Historical Performance Analysis")
+st.markdown("### Historical Performance Analysis")
 
 try:
     hist_visits = visit_df[visit_df['air_store_id'] == selected_store_id].copy()
@@ -528,7 +664,7 @@ try:
             st.metric("Lowest Day", f"{hist_visits['visitors'].min()}")
         
         # Interactive historical chart
-        st.markdown("Historical Visitor Trends")
+        st.markdown("### Historical Visitor Trends")
         
         fig = px.line(
             hist_visits, 
@@ -548,12 +684,11 @@ try:
         st.plotly_chart(fig, use_container_width=True)
         
         # ENHANCED HEATMAP SECTION
-        st.markdown("Enhanced Visitor Pattern Heatmap")
+        st.markdown("### Enhanced Visitor Pattern Heatmap")
         
         # Prepare heatmap data
         hist_visits['day_of_week'] = hist_visits['visit_date'].dt.day_name()
         hist_visits['month'] = hist_visits['visit_date'].dt.strftime('%b')
-        hist_visits['hour'] = hist_visits['visit_date'].dt.hour  # If you have hourly data
         
         # Create pivot table for heatmap
         pivot_table = hist_visits.pivot_table(
@@ -563,43 +698,46 @@ try:
             aggfunc='mean'
         )
         
-        day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        pivot_table = pivot_table.reindex(day_order)
-        
-        # Create interactive heatmap with Plotly
-        fig_heatmap = go.Figure(data=go.Heatmap(
-            z=pivot_table.values,
-            x=pivot_table.columns,
-            y=pivot_table.index,
-            colorscale='YlOrRd',
-            hoverongaps=False,
-            hovertemplate='<b>%{y}</b><br><b>%{x}</b><br>Avg Visitors: %{z:.0f}<extra></extra>'
-        ))
-        
-        fig_heatmap.update_layout(
-            title='Average Visitors by Day of Week and Month',
-            xaxis_title='Month',
-            yaxis_title='Day of Week',
-            height=500
-        )
-        
-        st.plotly_chart(fig_heatmap, use_container_width=True)
-        
-        # Insights from heatmap
-        busiest_day = pivot_table.mean(axis=1).idxmax()
-        busiest_month = pivot_table.mean(axis=0).idxmax()
-        
-        st.markdown(f"""
-        <div class="info-box">
-            <h4>Pattern Insights</h4>
-            <p><strong>Busiest Day:</strong> {busiest_day}</p>
-            <p><strong>Peak Month:</strong> {busiest_month}</p>
-            <p><strong>Weekend vs Weekday:</strong> 
-            {('Weekends are busier' if pivot_table.loc[['Saturday', 'Sunday']].mean().mean() > 
-              pivot_table.loc[['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']].mean().mean() 
-              else 'Weekdays are busier')}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        if not pivot_table.empty:
+            day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            pivot_table = pivot_table.reindex([day for day in day_order if day in pivot_table.index])
+            
+            # Create interactive heatmap with Plotly
+            fig_heatmap = go.Figure(data=go.Heatmap(
+                z=pivot_table.values,
+                x=pivot_table.columns,
+                y=pivot_table.index,
+                colorscale='YlOrRd',
+                hoverongaps=False,
+                hovertemplate='<b>%{y}</b><br><b>%{x}</b><br>Avg Visitors: %{z:.0f}<extra></extra>'
+            ))
+            
+            fig_heatmap.update_layout(
+                title='Average Visitors by Day of Week and Month',
+                xaxis_title='Month',
+                yaxis_title='Day of Week',
+                height=500
+            )
+            
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+            
+            # Insights from heatmap
+            if not pivot_table.empty:
+                busiest_day = pivot_table.mean(axis=1).idxmax()
+                busiest_month = pivot_table.mean(axis=0).idxmax()
+                
+                weekend_avg = pivot_table.loc[pivot_table.index.intersection(['Saturday', 'Sunday'])].mean().mean()
+                weekday_avg = pivot_table.loc[pivot_table.index.intersection(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])].mean().mean()
+                
+                st.markdown(f"""
+                <div class="info-box">
+                    <h4> Pattern Insights</h4>
+                    <p><strong>Busiest Day:</strong> {busiest_day}</p>
+                    <p><strong>Peak Month:</strong> {busiest_month}</p>
+                    <p><strong>Weekend vs Weekday:</strong> 
+                    {('Weekends are busier' if weekend_avg > weekday_avg else 'Weekdays are busier')}</p>
+                </div>
+                """, unsafe_allow_html=True)
         
     else:
         st.info("No historical data available for this restaurant.")
@@ -612,39 +750,41 @@ except Exception as e:
 # =========================
 if enable_comparison and len(comparison_stores) > 1:
     st.markdown("---")
-    st.markdown("Multi-Store Performance Comparison")
+    st.markdown("### Multi-Store Performance Comparison")
     
     try:
         comparison_data = []
         
         for store_id in comparison_stores:
             store_visits = visit_df[visit_df['air_store_id'] == store_id]
-            store_name = store_df[store_df['air_store_id'] == store_id]['air_genre_name'].iloc[0]
+            if not store_visits.empty:
+                store_name = store_df[store_df['air_store_id'] == store_id]['air_genre_name'].iloc[0]
+                
+                comparison_data.append({
+                    'Store ID': store_id,
+                    'Genre': store_name,
+                    'Avg Visitors': store_visits['visitors'].mean(),
+                    'Max Visitors': store_visits['visitors'].max(),
+                    'Total Days': len(store_visits)
+                })
+        
+        if comparison_data:
+            comparison_df = pd.DataFrame(comparison_data)
             
-            comparison_data.append({
-                'Store ID': store_id,
-                'Genre': store_name,
-                'Avg Visitors': store_visits['visitors'].mean(),
-                'Max Visitors': store_visits['visitors'].max(),
-                'Total Days': len(store_visits)
-            })
-        
-        comparison_df = pd.DataFrame(comparison_data)
-        
-        # Comparison chart
-        fig_comparison = px.bar(
-            comparison_df,
-            x='Store ID',
-            y='Avg Visitors',
-            title='Average Visitors Comparison',
-            color='Genre',
-            hover_data=['Max Visitors', 'Total Days']
-        )
-        
-        st.plotly_chart(fig_comparison, use_container_width=True)
-        
-        # Comparison table
-        st.dataframe(comparison_df, use_container_width=True)
+            # Comparison chart
+            fig_comparison = px.bar(
+                comparison_df,
+                x='Store ID',
+                y='Avg Visitors',
+                title='Average Visitors Comparison',
+                color='Genre',
+                hover_data=['Max Visitors', 'Total Days']
+            )
+            
+            st.plotly_chart(fig_comparison, use_container_width=True)
+            
+            # Comparison table
+            st.dataframe(comparison_df, use_container_width=True)
         
     except Exception as e:
         st.warning(f"Error in comparison analysis: {str(e)}")
@@ -655,8 +795,8 @@ if enable_comparison and len(comparison_stores) > 1:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #666; padding: 2rem;">
-    <p>Powered by AI Machine Learning | Built with Streamlit</p>
-    <p><strong>Pro Tip:</strong> Use the heatmap to identify peak days and optimize your staffing!</p>
+    <p> Powered by AI Machine Learning | Built with Streamlit</p>
+    <p><strong> Pro Tip:</strong> Use the heatmap to identify peak days and optimize your staffing!</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -664,10 +804,10 @@ st.markdown("""
 # SIDEBAR FOOTER
 # =========================
 st.sidebar.markdown("---")
-st.sidebar.markdown("Model Performance")
+st.sidebar.markdown("###  Model Performance")
 st.sidebar.info("This AI model is trained on historical visitor data to provide accurate predictions.")
 
-st.sidebar.markdown("Usage Tips")
+st.sidebar.markdown("###  Usage Tips")
 st.sidebar.markdown("""
 - Use short forecast periods (7-30 days) for best accuracy
 - Check the heatmap for seasonal patterns
@@ -675,5 +815,5 @@ st.sidebar.markdown("""
 - Download forecasts for business planning
 """)
 
-st.sidebar.markdown("Need Help?")
+st.sidebar.markdown("###  Need Help?")
 st.sidebar.markdown("Contact support for questions about forecasting or data interpretation.")
